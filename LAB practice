@@ -1,0 +1,116 @@
+Building Advanced Docker Skills
+Creating Base Docker Image
+Solution
+ 
+Solution
+The model solution for how to complete the tasks is detailed below.
+Task 1
+In this task, you will install the debootstrap and dirmngr packages and create a base Debian system.
+Step 1
+Power on PLABUBUNTU01. At the command prompt, first run the command that is provided below to install the debootstrap package:
+sudo apt-get install debootstrap
+And then run the command provided below to install the dirmngr package:
+sudo apt-get install dirmngr
+Step 2
+Having installed the packages, download and store Debian signing to use different Debian-based Linux distributions.
+To download, run the command provided below:
+sudo apt-key --keyring /etc/apt/trusted.gpg.d/debian-archive-stretch-stable.gpg adv --keyserver hkp://pgpkeys.mit.edu:80 --recv-keys EF0F382A1A7B6500
+Ensure the output indicates the “Total number processed” value as “1”, and the “Imported” value as “1”, as indicated in the output section below.
+
+
+
+Step 3
+Next, create a base Debian system with an enabled main using the debootstrap command provided below:
+sudo debootstrap --keyring /etc/apt/trusted.gpg.d/debian-archive-stretch-stable.gpg --force-check-gpg --variant=minbase --components=main,contrib,non-free --include=dirmngr,apt-transport-https --arch=amd64 stretch debian-stretch http :// deb . debian . org / debian /
+Upon successful execution of the command, you will get an output message in the output section that reads “Base system installed successfully”, as shown below.
+
+
+
+Task 2
+In this task, you will mount the udev, devpts, proc and sysfs filesystems inside the base Debian system that was created in the first task.
+Step 1
+Verify the initial base system size of the base image that was created in the previous task using command provided below:
+sudo du --human-readable --summarize debian-stretch
+Confirm the output, which is marked in the output terminal provided below.
+
+
+
+Step 2
+Mount the udev, devpts, proc and dydfs filesystems inside the image using the sets of commands provided below:
+Command 1: sudo mount --bind /dev debian-stretch/dev
+Command 2: sudo mount --bind /dev/pts debian-stretch/dev/pts
+Command 3: sudo mount --bind /proc debian-stretch/proc
+Command 4: sudo mount --bind /sys debian-stretch/sys
+Step 3
+Change the root directory to verify and execute the chroot command provided below:
+sudo chroot debian-stretch root@ip-172-31-29-142:/#
+Task 3
+In this task, you will create an archive and use Docker to import an image.
+Step1
+Clean up the base image by removing non-essential packages and downloaded package lists, then exit the base image prompt using the set of commands provided below:
+Command 1: apt-get remove --allow-remove-essential e2fsprogs e2fslibs nano pinentry-curses whiptail kmod iptables iproute2 dmidecode
+Command 2: apt-get clean
+Command 3: find /var/lib/apt/lists/ -maxdepth 2 -type f -delete
+Command 4: exit
+Step 2
+Detach the filesystem that was mounted in the previous task and verify the base system size using the command provided below:
+sudo du --human-readable --summarize debian-stretch
+Upon executing the command, you should get the size information as shown below.
+
+
+
+Step 3
+Create an archive with Debian base system using the command provided below:
+sudo tar --verbose --create --file debian-stretch.tar --directory debian-stretch
+Upon successful execution, you should get the output shown below.
+
+
+
+Step 4
+Use Docker to import an image, the command is provided below:
+sudo cat debian-stretch.tar | sudo docker import - debian-stretch
+After executing the command, verify the output which should display the sha256 number, as shown below.
+
+
+
+Task 4
+In this task, you will create a Dockerfile using nginx and build an image.
+Step 1
+Create a directory titled nginx, change the current directory to nginx and then create a Dockerfile using the VI Editor. The commands for these activities are provided below:
+Command 1: mkdir nginx
+Command 2: cd nginx
+Command 3: sudo vi Dockerfile
+Step 2
+After launching the VI Editor, specify the following code in the Dockerfile to use “Debian-stretch” as the base image, update the instance and install nginx to it, create a working directory titled nginx inside the /etc folder, execute nginx command using CMD and expose the port to be 80 using EXPOSE instruction.
+FROM "debian-stretch"
+RUN \
+  apt-get update && \
+  apt-get install nginx
+WORKDIR /etc/nginx
+CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 80
+Step 3
+Build an image from the Dockerfile using the command provided below:
+sudo docker build -t nginx-test
+After executing the command, verify the console output which should display a final message that reads “successfully built”, as shown below.
+
+
+
+Task 5
+In this task, you will run nginx process inside a container using port 8080.
+Step 1
+Verify images using the command provided below:
+sudo docker images
+Upon executing, confirm the output as shown below.
+
+
+
+Step 2
+Run nginx process inside a container (in foreground) mapping it to port 8080 using the command provided below:
+sudo docker run -p 8080:80 --name samplenginx-test
+Step 3
+Verify the container status using the command provided below:
+sudo docker container stats samplenginx
+Upon executing the command, you should get the output shown below.
+
+
